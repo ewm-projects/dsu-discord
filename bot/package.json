@@ -1,0 +1,18 @@
+{
+  "name": "dsu-discord",
+  "version": "1.0.0",
+  "description": "Repository for applications (i.e. discord bot, API, website, etc) created for the Daily Standups Discord server",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5"
+  }
+}
