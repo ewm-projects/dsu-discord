@@ -1,0 +1,87 @@
+services:
+  bot:
+    build:
+      context: ./bot
+    develop:
+      watch:
+        - action: sync
+          path: ./bot
+          target: /app/bot
+          ignore:
+            - node_modules
+        - action: rebuild
+          path: ./bot/package.json
+
+  web:
+    build:
+      context: ./web
+    ports:
+      - 8001:8001
+    depends_on:
+      api:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app/web
+          ignore:
+            - node_modules
+        - action: rebuild
+          path: ./web/package.json
+
+  api:
+    build:
+      context: ./api
+      target: dev
+    ports:
+      - 8000:8000
+    # see: https://medium.com/@ntjegadeesh/implementing-health-checks-and-auto-restarts-for-fastapi-applications-using-docker-and-4245aab27ece
+    healthcheck:
+      test: curl --fail http://localhost:8000/docs || exit 1
+      # test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      interval: 120s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      - db
+    develop:
+      # Create a `watch` configuration to update the appl
+      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+      watch:
+        # Sync the working directory with the `/app/backend` directory in the container
+        - action: sync
+          path: ./api
+          target: /app/api
+          # Exclude the project virtual environment — it could be for a
+          # different platform in the container
+          ignore:
+            - ./api/.venv/
+
+        # Rebuild the image on changes to the `requirements.txt`
+        - action: rebuild
+          # path: ./api/pyproject.toml
+          path: ./api/requirements.txt
+
+  db:
+    image: mongo
+    command: mongod --quiet --logpath /dev/null
+    ports:
+      - "27017:27017"
+    volumes:
+      - "dsu-db:/data/db"
+
+  db-viewer:
+    image: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://db:27017
+      - ME_CONFIG_BASICAUTH_USERNAME=
+      - ME_CONFIG_BASICAUTH_PASSWORD=
+    depends_on:
+      - db
+    ports:
+      - 8002:8081
+
+volumes:
+  dsu-db:
