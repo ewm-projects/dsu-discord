@@ -1,0 +1,3 @@
+__pycache__
+# Exclude the project virtual environment from image builds
+.venv
